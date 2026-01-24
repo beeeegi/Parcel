@@ -3,6 +3,7 @@
 Convert roblox place files to rojo projects with a nice gui.
 
 Forked from [rbxlx-to-rojo](https://github.com/rojo-rbx/rbxlx-to-rojo) by [Kampfkarren](https://github.com/Kampfkarren)
+
 <img width="1920" height="1032" alt="{06A26287-C250-45D1-9C7B-512CD60DE7B7}" src="https://github.com/user-attachments/assets/0e2cefb3-c67a-45d2-a960-33e7c59efc7e" />
 
 
@@ -63,3 +64,5 @@ your-project/
 ## License
 
 MPL-2.0, see [LICENSE.md](LICENSE.md)
+
+## :star: If you found this tool useful, consider starring the repository to show your support!
