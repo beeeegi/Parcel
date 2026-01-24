@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARCEL</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>PARCEL</h1>
+            <p class="subtitle">ROBLOX TO ROJO CONVERTER</p>
+        </header>
+
+        <main class="main-content">
+            <div class="grid">
+                <div class="card" id="folderCard">
+                    <div class="card-header">
+                        <span class="card-icon">📁</span>
+                        <h2>OUTPUT</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-label">Destination Folder</div>
+                        <div class="card-value" id="outputPath">NOT SELECTED</div>
+                        <button class="btn" id="selectFolderBtn">SELECT FOLDER</button>
+                    </div>
+                </div>
+
+                <div class="card" id="fileCard">
+                    <div class="card-header">
+                        <span class="card-icon">📄</span>
+                        <h2>INPUT</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-label">Place File (.rbxl / .rbxlx)</div>
+                        <div class="card-value" id="inputPath">NOT SELECTED</div>
+                        <button class="btn" id="selectFileBtn" disabled>SELECT FILE</button>
+                    </div>
+                </div>
+
+                <div class="card card-wide" id="convertCard">
+                    <div class="card-header">
+                        <span class="card-icon">⚡</span>
+                        <h2>CONVERT</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-label">Status</div>
+                        <div class="card-value status-text" id="statusText">AWAITING INPUT...</div>
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <button class="btn btn-primary" id="convertBtn" disabled>EXECUTE CONVERSION</button>
+                    </div>
+                </div>
+
+                <div class="card card-wide" id="logsCard">
+                    <div class="card-header">
+                        <span class="card-icon">📡</span>
+                        <h2>ACTIVITY LOG</h2>
+                        <button class="btn-small" id="clearLogsBtn">CLEAR</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" id="logContainer">
+                            <div class="log-entry">[AWAITING SIGNAL...]</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <span>PARCEL v1.0.0</span>
+        </footer>
+    </div>
+
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="card-icon">⚠️</span>
+                <h2>ERROR</h2>
+            </div>
+            <div class="modal-body">
+                <p id="errorMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="closeErrorBtn">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-header modal-header-success">
+                <span class="card-icon">✅</span>
+                <h2>SUCCESS</h2>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="openFolderBtn">OPEN FOLDER</button>
+                <button class="btn btn-primary" id="closeSuccessBtn">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,31 +1,63 @@
-# rbxlx-to-rojo (now supports .rbxl!)
-Tool to convert existing Roblox games into Rojo projects by reading their `rbxl` or `rbxlx` place files.
+# Parcel
 
-# Using rbxlx-to-rojo
-## Setup
-Before you can use rbxlx-to-rojo, you need the following:
+Convert roblox place files to rojo projects with a nice gui.
 
-- At least Rojo 0.5.0 Alpha 12 or higher to use the tool.
-- A rbxlx place file that at least has scripts
+Forked from [rbxlx-to-rojo](https://github.com/rojo-rbx/rbxlx-to-rojo) by [Kampfkarren](https://github.com/Kampfkarren)
 
-If there aren't any scripts in the rbxlx file, rbxlx-to-rojo will return an error.
+## What it does
 
-Download the latest release of rbxlx-to-rojo here: https://github.com/rojo-rbx/rbxlx-to-rojo/releases
-## Porting the game
-Before you can port your game into Rojo projects, you need a place/model file. If you have an existing game that isn't exported:
+- Converts `.rbxl` and `.rbxlx` files to rojo project structure
+- Extracts all your scripts, folders, and services
+- Shows live logs so you can see what's happening
+- Dark terminal style UI because why not
 
-- Go to studio, click on any place, and then click on File -> Save to file as.
+## Requirements
 
-- Create a folder and name it whatever you want.
-### Steps to port the game:
-1. Double-click on rbxlx-to-rojo on wherever you installed it.
-2. Select the .rbxl file you saved earlier.
-3. Now, select the folder that you just created.
+- Rojo 0.5.0 alpha 12+ to actually use the generated projects
+- A place file with at least one script in it
 
-If you followed the steps correctly, you should see something that looks like this:
-![](assets/folders.png)
+> Tip: Use `.rbxl` (binary) format if `.rbxlx` gives you errors. Some newer XML features aren't supported yet.
 
-Congratulations, you successfully ported an existing game using rbxlx-to-rojo!
+## Installation
+
+Grab the latest release: [here](https://github.com/beeeegi/parcel/releases)
+
+Or build it yourself:
+
+```bash
+npm install
+npm run build
+```
+
+You'll find the exe in `target/release/parcel.exe`
+
+## How to use
+
+1. Open parcel
+2. Pick where you want the project saved
+3. Pick your place file
+4. Hit convert
+5. Wait few secs
+6. Done
+
+## Output
+
+```
+your-project/
+├── default.project.json
+└── src/
+    ├── ReplicatedStorage/
+    ├── ServerScriptService/
+    ├── ServerStorage/
+    └── ...
+```
+
+## Credits
+
+- Original tool by [Kampfkarren](https://github.com/Kampfkarren)
+- Uses [rbx-dom](https://github.com/rojo-rbx/rbx-dom) for parsing
+- Built with [Tauri](https://tauri.app/) and [Rust](https://rust-lang.org)
 
 ## License
-rbxlx-to-rojo is available under The Mozilla Public License, Version 2. Details are available in [LICENSE.md](LICENSE.md).
+
+MPL-2.0, see [LICENSE.md](LICENSE.md)

@@ -1,18 +1,24 @@
 # Changelog
-All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## 1.0.0 - 01/24/2026
 
-## [Unreleased]
+First GUI release! Completely rewrote the old CLI tool into a desktop app.
 
-## [1.0.1] - 2021-04-11
-### Fixed
-- Fixed newer builds not being usable.
+### What's new
+- Terminal-style dark UI with blood red theme
+- Live activity log that updates while converting
+- Progress bar so you know something's happening
+- Open folder button after conversion
+- Error popups that actually tell you what went wrong
 
-## [1.0.0] - 2021-01-06
-### Added
-- Added support for .rbxl and .rbxm, and not just .rbxlx.
+### Technical stuff
+- Uses tauri v2 for the app framework
+- Conversion runs on a separate thread so the UI doesn't freeze
+- Vanilla html/css/js frontend, no frameworks needed
 
-### Changed
-- Changed file reading mechanism to be one that should be more optimized, increasing read times. You can further increase read times by switching to binary (.rbxl, .rbxm) files instead of using .rbxlx.
+### Removed from original
+- CLI
+
+## Before 1.0
+
+This was originally [rbxlx-to-rojo](https://github.com/rojo-rbx/rbxlx-to-rojo), a CLI tool by Kampfkarren. parcel is a GUI rewrite using the same core conversion code.

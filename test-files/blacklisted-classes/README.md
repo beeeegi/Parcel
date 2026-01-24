@@ -1,1 +1,0 @@
-This was found because EchoReaper's Friends as Test Players plugin puts stuff into Geometry. While this isn't an official Roblox plugin, there's still no reason you should ever put anything in Geoemtry (or other classes that aren't put into this list).

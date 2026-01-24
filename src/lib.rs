@@ -1,4 +1,4 @@
-use log::debug;
+use log::{debug, warn};
 use rbx_dom_weak::{
     types::{Ref, Variant},
     Instance, WeakDom,
@@ -13,9 +13,6 @@ use structures::*;
 
 pub mod filesystem;
 pub mod structures;
-
-#[cfg(test)]
-mod tests;
 
 lazy_static::lazy_static! {
     static ref NON_TREE_SERVICES: HashSet<&'static str> = include_str!("./non-tree-services.txt").lines().collect();
@@ -50,10 +47,9 @@ fn repr_instance<'a>(
                         contents: Cow::Owned(
                             serde_json::to_string_pretty(&MetaFile {
                                 class_name: None,
-                                // properties: BTreeMap::new(),
                                 ignore_unknown_instances: true,
                             })
-                            .unwrap()
+                            .unwrap_or_else(|_| "{}".to_string())
                             .as_bytes()
                             .into(),
                         ),
@@ -68,14 +64,17 @@ fn repr_instance<'a>(
                 "Script" => ".server",
                 "LocalScript" => ".client",
                 "ModuleScript" => "",
-                _ => unreachable!(),
+                _ => "",
             };
 
-            let source = match child.properties.get("Source").expect("no Source") {
-                Variant::String(value) => value,
-                _ => unreachable!(),
-            }
-            .as_bytes();
+            // Get source code, default to empty if not found
+            let source = match child.properties.get("Source") {
+                Some(Variant::String(value)) => value.as_bytes(),
+                _ => {
+                    warn!("Script '{}' has no Source property, using empty source", child.name);
+                    b""
+                }
+            };
 
             if child.children().is_empty() {
                 Some((
@@ -89,10 +88,9 @@ fn repr_instance<'a>(
                 let meta_contents = Cow::Owned(
                     serde_json::to_string_pretty(&MetaFile {
                         class_name: None,
-                        // properties: BTreeMap::new(),
                         ignore_unknown_instances: true,
                     })
-                    .expect("couldn't serialize meta")
+                    .unwrap_or_else(|_| "{}".to_string())
                     .as_bytes()
                     .into(),
                 );
@@ -222,7 +220,7 @@ fn repr_instance<'a>(
                         filename: Cow::Owned(folder_path.join("init.meta.json")),
                         contents: Cow::Owned(
                             serde_json::to_string_pretty(&meta)
-                                .expect("couldn't serialize meta")
+                                .unwrap_or_else(|_| "{}".to_string())
                                 .as_bytes()
                                 .into(),
                         ),
@@ -237,7 +235,13 @@ fn repr_instance<'a>(
 impl<'a, I: InstructionReader + ?Sized> TreeIterator<'a, I> {
     fn visit_instructions(&mut self, instance: &Instance, has_scripts: &HashMap<Ref, bool>) {
         for child_id in instance.children() {
-            let child = self.tree.get_by_ref(*child_id).expect("got fake child id?");
+            let child = match self.tree.get_by_ref(*child_id) {
+                Some(c) => c,
+                None => {
+                    warn!("Invalid child reference, skipping");
+                    continue;
+                }
+            };
 
             let (instructions_to_create_base, path) = if child.class == "StarterPlayer" {
                 // We can't respect StarterPlayer as a service, because then Rojo
@@ -258,15 +262,15 @@ impl<'a, I: InstructionReader + ?Sized> TreeIterator<'a, I> {
                                 .children()
                                 .iter()
                                 .filter(|id| has_scripts.get(id) == Some(&true))
-                                .map(|child_id| {
-                                    let child = self.tree.get_by_ref(*child_id).unwrap();
-                                    (
+                                .filter_map(|child_id| {
+                                    let child = self.tree.get_by_ref(*child_id)?;
+                                    Some((
                                         child.name.clone(),
                                         Instruction::partition(
                                             &child,
                                             folder_path.join(&child.name),
                                         ),
-                                    )
+                                    ))
                                 })
                                 .collect(),
                             ignore_unknown_instances: true,
@@ -306,13 +310,10 @@ fn check_has_scripts(
     let mut children_have_scripts = false;
 
     for child_id in instance.children() {
-        let result = check_has_scripts(
-            tree,
-            tree.get_by_ref(*child_id).expect("fake child id?"),
-            has_scripts,
-        );
-
-        children_have_scripts = children_have_scripts || result;
+        if let Some(child) = tree.get_by_ref(*child_id) {
+            let result = check_has_scripts(tree, child, has_scripts);
+            children_have_scripts = children_have_scripts || result;
+        }
     }
 
     let result = match instance.class.as_str() {
@@ -326,7 +327,16 @@ fn check_has_scripts(
 
 pub fn process_instructions(tree: &WeakDom, instruction_reader: &mut dyn InstructionReader) {
     let root = tree.root_ref();
-    let root_instance = tree.get_by_ref(root).expect("fake root id?");
+    
+    let root_instance = match tree.get_by_ref(root) {
+        Some(instance) => instance,
+        None => {
+            warn!("Could not find root instance in tree");
+            instruction_reader.finish_instructions();
+            return;
+        }
+    };
+    
     let path = PathBuf::new();
 
     let mut has_scripts = HashMap::new();

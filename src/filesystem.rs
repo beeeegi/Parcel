@@ -1,4 +1,5 @@
 use crate::structures::*;
+use log::{error, info, warn};
 use serde::{ser::SerializeMap, Serialize, Serializer};
 use std::{
     collections::BTreeMap,
@@ -42,6 +43,7 @@ pub struct FileSystem {
     project: Project,
     root: PathBuf,
     source: PathBuf,
+    errors: Vec<String>,
 }
 
 impl FileSystem {
@@ -49,13 +51,27 @@ impl FileSystem {
         let source = root.join(SRC);
         let project = Project::new();
 
-        fs::create_dir(&source).ok(); // It'll error later if it matters
+        // Create source directory, log if it fails
+        if let Err(e) = fs::create_dir_all(&source) {
+            warn!("Could not create source directory: {}", e);
+        }
 
         Self {
             project,
             root,
             source,
+            errors: Vec::new(),
         }
+    }
+
+    /// Returns any errors that occurred during processing
+    pub fn get_errors(&self) -> &[String] {
+        &self.errors
+    }
+
+    /// Returns true if any errors occurred
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
     }
 }
 
@@ -66,17 +82,22 @@ impl InstructionReader for FileSystem {
                 name,
                 mut partition,
             } => {
-                assert!(
-                    self.project.tree.get(&name).is_none(),
-                    "Duplicate item added to tree! Instances can't have the same name: {}",
-                    name
-                );
+                // Check for duplicates but don't panic - log and skip
+                if self.project.tree.get(&name).is_some() {
+                    let msg = format!(
+                        "Duplicate item in tree (skipping): {}",
+                        name
+                    );
+                    warn!("{}", msg);
+                    self.errors.push(msg);
+                    return;
+                }
 
                 if let Some(path) = partition.path {
                     partition.path = Some(PathBuf::from(SRC).join(path));
                 }
 
-                for mut child in partition.children.values_mut() {
+                for child in partition.children.values_mut() {
                     if let Some(path) = &child.path {
                         child.path = Some(PathBuf::from(SRC).join(path));
                     }
@@ -86,30 +107,81 @@ impl InstructionReader for FileSystem {
             }
 
             Instruction::CreateFile { filename, contents } => {
-                let mut file = File::create(self.source.join(&filename)).unwrap_or_else(|error| {
-                    panic!("can't create file {:?}: {:?}", filename, error)
-                });
-                file.write_all(&contents).unwrap_or_else(|error| {
-                    panic!("can't write to file {:?} due to {:?}", filename, error)
-                });
+                let full_path = self.source.join(&filename);
+                
+                match File::create(&full_path) {
+                    Ok(mut file) => {
+                        if let Err(e) = file.write_all(&contents) {
+                            let msg = format!(
+                                "Failed to write to file {:?}: {}",
+                                filename, e
+                            );
+                            error!("{}", msg);
+                            self.errors.push(msg);
+                        }
+                    }
+                    Err(e) => {
+                        let msg = format!(
+                            "Failed to create file {:?}: {}",
+                            filename, e
+                        );
+                        error!("{}", msg);
+                        self.errors.push(msg);
+                    }
+                }
             }
 
             Instruction::CreateFolder { folder } => {
-                fs::create_dir_all(self.source.join(&folder)).unwrap_or_else(|error| {
-                    panic!("can't write to folder {:?}: {:?}", folder, error)
-                });
+                let full_path = self.source.join(&folder);
+                
+                if let Err(e) = fs::create_dir_all(&full_path) {
+                    let msg = format!(
+                        "Failed to create folder {:?}: {}",
+                        folder, e
+                    );
+                    error!("{}", msg);
+                    self.errors.push(msg);
+                }
             }
         }
     }
 
     fn finish_instructions(&mut self) {
-        let mut file = File::create(self.root.join("default.project.json"))
-            .expect("can't create default.project.json");
-        file.write_all(
-            &serde_json::to_string_pretty(&self.project)
-                .expect("couldn't serialize project")
-                .as_bytes(),
-        )
-        .expect("can't write project");
+        let project_path = self.root.join("default.project.json");
+        
+        // Serialize the project
+        let json = match serde_json::to_string_pretty(&self.project) {
+            Ok(json) => json,
+            Err(e) => {
+                let msg = format!("Failed to serialize project: {}", e);
+                error!("{}", msg);
+                self.errors.push(msg);
+                return;
+            }
+        };
+
+        // Create and write the file
+        match File::create(&project_path) {
+            Ok(mut file) => {
+                if let Err(e) = file.write_all(json.as_bytes()) {
+                    let msg = format!(
+                        "Failed to write project file: {}",
+                        e
+                    );
+                    error!("{}", msg);
+                    self.errors.push(msg);
+                } else {
+                    info!("Created default.project.json");
+                }
+            }
+            Err(e) => {
+                let msg = format!(
+                    "Failed to create project file: {}",
+                    e
+                );
+                error!("{}", msg);
+                self.errors.push(msg);
+            }
+        }
     }
 }
