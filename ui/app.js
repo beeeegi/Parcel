@@ -238,8 +238,6 @@ function renderLogs(logs) {
         const time = date.toLocaleTimeString();
         return `<div class="log-entry"><span class="timestamp">[${time}]</span> <span class="level ${log.level}">${log.level}</span> ${escapeHtml(log.message)}</div>`;
     }).join('');
-    
-    elements.logContainer.scrollTop = elements.logContainer.scrollHeight;
 }
 
 function escapeHtml(text) {
