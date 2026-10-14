@@ -129,7 +129,7 @@ fn do_conversion(input_path: &str, output_folder: &str) -> Result<ConversionResu
                 )))
         }
         Some(Cow::Borrowed("rbxl")) => {
-            rbx_binary::from_reader_default(file_source)
+            rbx_binary::from_reader(file_source)
                 .map_err(|e| ConversionError::DecodeError(format!("Binary decode error: {}", e)))
         }
         _ => Err(ConversionError::InvalidFileExtension),
